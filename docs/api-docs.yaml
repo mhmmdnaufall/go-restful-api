@@ -1,0 +1,924 @@
+openapi: 3.0.3
+info:
+  title: API Specification
+  version: 1.0.0
+  description: Documentation for API Specification
+  contact:
+    name: Muhammad Naufal
+    email: muhammadnaufaall@gmail.com
+    url: https://github.com/mhmmdnaufall
+servers:
+  - description: API Server
+    url: http://localhost:8080/api
+tags:
+  - name: User
+    description: user-controller
+  - name: Auth
+    description: For Login and Logout user
+  - name: Contact
+    description: contact-controller
+  - name: Address
+    description: address-controller
+  
+paths:
+  /users:
+    post:
+      tags:
+        - User
+      summary: Register new user
+      description: Register new user, but error when registering an existing user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RegisterUserRequest"
+            example:
+              username: mhmmdnaufal
+              password: rahasia
+              name: Muhammad Naufal
+      responses:
+        200:
+          description: Succsess Register User
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WebResponse"
+              example:
+                data: OK
+                errors: null
+                paging: null
+        400:
+          description: BAD REQUEST caused by username already exist
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WebResponse"
+              example:
+                data: null
+                errors: Username already registered
+                paging: null
+
+  /users/current:
+    get:
+      tags:
+        - User
+      security:
+        - Auth: []
+      summary: Get current user
+      description: Get current user by X-API-TOKEN
+      responses:
+        200:
+          description: Success get current user
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WebResponse"
+              example:
+                data:
+                  username: mhmmdnaufal
+                  name: Muhammad Naufal
+                errors: null
+                paging: null
+        401:
+          $ref: "#/components/responses/401"
+    patch:
+      tags: 
+        - User
+      security:
+        - Auth: []
+      summary: Update Current User
+      description: Update Current User name or password
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateUserRequest"
+            examples:
+              Update name + password:
+                description: Update name and password
+                value:
+                    name: Muhammad Naufal Update
+                    password: Password Update
+              Update name:
+                description: Update name only
+                value:
+                  name: Muhammad Naufal Update
+              Update password:
+                description: Update password only
+                value:
+                  password: Password Update
+          
+      responses:
+        200:
+          description: Success update current user
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WebResponse"
+              example:
+                data:
+                  username: mhmmdnaufal
+                  name: Updated Name
+                errors: null
+                paging: null
+        401:
+          $ref: "#/components/responses/401"
+
+  /auth/login:
+    post:
+      tags:
+        - Auth
+      summary: Login User
+      description: Login User
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginUserRequest"
+            example:
+              username: mhmmdnaufal
+              password: rahasia
+      responses:
+        200:
+          description: Success Login User
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WebResponse"
+              example:
+                data:
+                  token: b911e301-8be7-4283-85b8-5633f70aa953
+                  expiredAt: 1694934550809
+                errors: null
+                paging: null
+        401:
+          description: Failed authorizing user
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WebResponse"
+              example:
+                data: null
+                errors: Username or password wrong
+                paging: null
+  
+  /auth/logout:
+    delete:
+      tags:
+        - Auth
+      description: Logout user & remove token user
+      summary: Logout user
+      security:
+        - Auth: []
+      responses:
+        200: 
+          description: Success Logout User
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WebResponse"
+              example:
+                data: OK
+                errors: null
+                paging: null
+        401:
+          $ref: "#/components/responses/401"
+      
+
+  /contacts:
+    post:
+      tags:
+        - Contact
+      summary: Create Contact
+      security:
+        - Auth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: 
+              $ref: "#/components/schemas/CreateContactRequest"
+            example:
+              firstName: Ariel
+              lastName: Peterpan
+              email: ariel@gmail.com
+              phone: "+621234567890"
+      responses:
+        200:
+          description: Success Create Contact
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WebResponse"
+              example:
+                data:
+                  id: 71c30357-3434-40cd-ac00-89363af1975a
+                  firstName: Ariel
+                  lastName: Peterpan
+                  email: ariel@gmail.com
+                  phone: "+621234567890"
+                errors: null
+                paging: null
+        400: 
+          description: Wrong Format
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WebResponse"
+              examples:
+                firstName:
+                  description: firstName Blank error
+                  value:
+                    data: null
+                    errors: "firstName: must not be blank"
+                    paging: null
+                email + phone:
+                  description: email and phone are not in a valid format
+                  value:
+                    data: null
+                    errors: "phone: phone: must be a well-formed phone number, email: must be a well-formed email address"
+                    paging: null
+                email:
+                  description: email doesn't have a valid format
+                  value:
+                    data: null
+                    errors: "email: must be a well-formed email address"
+                    paging: null
+                phone:
+                  description: phone doesn't have a valid format
+                  value:
+                    data: null
+                    errors: "phone: phone: must be a well-formed phone number"
+                    paging: null
+
+        401:
+          $ref: "#/components/responses/401"
+    get:
+      tags:
+        - Contact
+      description: Search Contact based on their attribute
+      summary: Search Contact
+      security:
+        - Auth: []
+      parameters:
+        - name: name
+          in: query
+          required: false
+          schema:
+            type: string
+          example: Ariel
+        - name: email
+          in: query
+          required: false
+          schema:
+            type: string
+          example: ariel@gmail.com
+        - name: phone
+          in: query
+          required: false
+          schema:
+            type: string
+          example: "+621234567890"
+        - name: page
+          in: query
+          required: false
+          schema:
+            type: integer
+            format: int32
+          example: 0
+        - name: size
+          in: query
+          required: false
+          schema:
+            type: string
+            format: int32
+          example: 10
+        
+      responses:
+        200:
+          description: Success Search Contact
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WebResponse"
+              examples:
+                name=ariel:
+                  description: Search for the name ariel
+                  value:
+                    data: 
+                      - id: 0cee1441-d4bd-41cb-8a36-a61db4db33ee
+                        firstName: Ariel
+                        lastName: Peterpan
+                        email: ariel@gmail.com
+                        phone: "+6281234567890"
+                      - id: 4c0196db-4195-4b6e-86e1-ffc8d816ca4a
+                        firstName: Ariel
+                        lastName: Noah
+                        email: noah@gmail.com
+                        phone:
+                      - id: 5c020359-a6db-42ba-9285-772e739f2620
+                        firstName: Rizki
+                        lastName: Ariel
+                        email: rizkiariel@gmail.com
+                        phone: "+6286789012345"
+                      - id: ccd3f50f-e7f2-4779-a48b-5ecfd3712576
+                        firstName: Ariel
+                        lastName: Putra
+                        email: putra@gmail.com
+                        phone: "+6280987654321"
+                    errors: null
+                    paging: 
+                      currentPage: 0
+                      totalPage: 1
+                      size: 10
+        401:
+          $ref: "#/components/responses/401"
+              
+  /contacts/{contactId}:
+    get:
+      tags:
+        - Contact
+      description: Get Contact By Id
+      summary: Get Contact By Id
+      security:
+        - Auth: []
+      parameters:
+        - name: contactId
+          in: path
+          required: true
+          example: 5c020359-a6db-42ba-9285-772e739f2620
+          schema:
+            type: string
+      responses:
+        200:
+          description: Success Get Contact
+          content: 
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WebResponse"
+              example:
+                data: 
+                  id: 5c020359-a6db-42ba-9285-772e739f2620
+                  firstName: Ariel
+                  lastName: Peterpan
+                  email: ariel@gmail.com
+                  phone: "+6281234567890"
+                errors: null
+                paging: null
+        401:
+          $ref: "#/components/responses/401"
+        404:
+          description: Contact Not Found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WebResponse"
+              example:
+                data: null
+                errors: Contact not found
+                paging: null
+    put:
+      tags:
+        - Contact
+      summary: Update Contact By Id
+      description: Update Contact By Id
+      security:
+        - Auth: []
+      parameters:
+        - name: contactId
+          in: path
+          required: true
+          schema:
+            type: string
+          example: 5c020359-a6db-42ba-9285-772e739f2620
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateContactRequest"
+            example:
+              firstName: Test
+              lastName: Updated
+              email: test@gmail.com
+              phone: "+6281234567890"
+      responses:
+        200:
+          description: Success Update Contact
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WebResponse"
+              example:
+                data: 
+                  id: "8136b3b5-8cbd-449e-823b-3286ccc665b6"
+                  firstName: Test
+                  lastName: Updated
+                  email: test@gmail.com
+                  phone: "+6281234567890"
+                errors: null
+                paging: null
+        401:
+          $ref: "#/components/responses/401"
+    delete:
+      tags:
+        - Contact
+      summary: Delete Contact By Id
+      description: Delete Contact By Id
+      security:
+        - Auth: []
+      parameters:
+        - name: contactId
+          required: true
+          in: path
+          schema:
+            type: string
+          example: 8136b3b5-8cbd-449e-823b-3286ccc665b6
+      responses:
+        200:
+          description: Success delete contact
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WebResponse"
+              example:
+                data: OK
+                errors: null
+                paging: null
+        401:
+          $ref: "#/components/responses/401"
+        404:
+          description: Contact not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WebResponse"
+              example:
+                data: null
+                errors: Contact not found
+                paging: null
+
+  /contacts/{contactId}/addresses:
+    post:
+      tags:
+        - Address
+      description: Add Contact Address
+      summary: Add Contact Address
+      security:
+        - Auth: []
+      parameters:
+        - name: contactId
+          in: path
+          required: true
+          schema:
+            type: string
+          example: 0cee1441-d4bd-41cb-8a36-a61db4db33ee
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateAddressRequest"
+            example:
+              street: Jalan Ibu Kita Kartini Putri Sejati
+              city: Jakarta Timur Daya
+              province: DKI Jakarta
+              country: Indonesia
+              postalCode: "112233"
+      responses:
+        200:
+          description: Success create address
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WebResponse"
+              example:
+                data: 
+                  id: 5f067634-8f52-4bb7-8a6e-1d161c75c664
+                  street: Jalan Ibu Kita Kartini Putri Sejati
+                  city: Jakarta Timur Daya
+                  province: DKI Jakarta
+                  country: Indonesia
+                  postalCode: "112233"
+                errors: null
+                paging: null
+
+        401:
+          $ref: "#/components/responses/401"
+
+        404:
+          description: Contact is not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WebResponse"
+              example:
+                data: null
+                errors: Contact is not found
+                paging: null
+    get:
+      description: Get list contact address
+      summary: Get list contact address
+      tags:
+        - Address
+      security:
+        - Auth: []
+      parameters:
+        - name: contactId
+          in: path
+          required: true
+          schema:
+            type: string
+          example: 0cee1441-d4bd-41cb-8a36-a61db4db33ee
+      responses:
+        200:
+          description: Success get contact address list
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WebResponse"
+              example:
+                data: 
+                  - id: 14815cd1-1bf5-4039-9e26-556f6c4b5668
+                    street: Jalan Ibu Kita Kartini Putri Sejati
+                    city: Jakarta Timur Daya
+                    province: DKI Jakarta
+                    country: Indonesia
+                    postalCode: "112233"
+                  - id: 5f067634-8f52-4bb7-8a6e-1d161c75c664
+                    street: Jalan Lapangan Berenang
+                    city: Acuh
+                    province: Sumatera timur
+                    country: Indonesia
+                    postalCode: "332211"
+                errors: null
+                paging: null
+
+        401:
+          $ref: "#/components/responses/401"
+
+        404:
+          description: Contact is not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WebResponse"
+              example:
+                data: null
+                errors: Contact is not found
+                paging: null
+      
+  /contacts/{contactId}/addresses/{addressId}:
+    get:
+      tags:
+        - Address
+      description: Get specific contact address
+      summary: Get contact address
+      security:
+        - Auth: []
+      parameters:
+        - name: contactId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: addressId
+          in: path
+          required: true
+          schema:
+            type: string            
+
+      responses:
+        200:
+          description: Success get contact address
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WebResponse"
+              example:
+                data:
+                  id: 14815cd1-1bf5-4039-9e26-556f6c4b5668
+                  street: Jalan Ibu Kita Kartini Putri Sejati
+                  city: Jakarta Timur Daya
+                  province: DKI Jakarta
+                  country: Indonesia
+                  postalCode: "112233"
+                errors: null
+                paging: null
+        401:
+          $ref: "#/components/responses/401"
+        404:
+          description: Address or Contact is not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WebResponse"
+              examples:
+                Address:
+                  description: Address is not found
+                  value:
+                    data: null
+                    errors: Address is not found
+                    paging: null
+                Contact:
+                  description: Contact is not found
+                  value:
+                    data: null
+                    errors: Contact is not found
+                    paging: null
+    put:
+      tags:
+        - Address   
+      description: Update Contact Address
+      summary: Update Contact Address
+      security:
+        - Auth: []
+      parameters:
+      - name: contactId
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: addressId
+        in: path
+        required: true
+        schema:
+          type: string  
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateAddressRequest"
+            example:
+              street: Jalan Ibu Kita Kartini Putri Sejati Putri Indonesia Harum Namanya
+              city: Jakarta Timur Daya
+              province: DKI Jakarta
+              country: Indonesia
+              postalCode: "112233"
+      responses:
+        200:
+          description: Success Update ContactRequest
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WebResponse"
+              example:
+                data: 
+                    id: 14815cd1-1bf5-4039-9e26-556f6c4b5668
+                    street: Jalan Ibu Kita Kartini Putri Sejati Putri Indonesia Harum Namanya
+                    city: Jakarta Timur Daya
+                    province: DKI Jakarta
+                    country: Indonesia
+                    postalCode: "112233"
+                errors: null
+                paging: null
+        401:
+          $ref: "#/components/responses/401"
+        404:
+          description: Address or Contact is not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WebResponse"
+              examples:
+                Address:
+                  description: Address is not found
+                  value:
+                    data: null
+                    errors: Address is not found
+                    paging: null
+                Contact:
+                  description: Contact is not found
+                  value:
+                    data: null
+                    errors: Contact is not found
+                    paging: null
+    delete:
+      tags:
+        - Address
+      description: Delete Contact Address
+      summary: Delete Contact Address
+      security:
+        - Auth: []
+      parameters:
+      - name: contactId
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: addressId
+        in: path
+        required: true
+        schema:
+          type: string  
+      responses:
+        200:
+          description: Success Delete Contact Address
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WebResponse"
+              example:
+                data: OK
+                errors: null
+                paging: null
+        
+        401:
+          $ref: "#/components/responses/401"
+        404:
+          description: Address or Contact is not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WebResponse"
+              examples:
+                Address:
+                  description: Address is not found
+                  value:
+                    data: null
+                    errors: Address is not found
+                    paging: null
+                Contact:
+                  description: Contact is not found
+                  value:
+                    data: null
+                    errors: Contact is not found
+                    paging: null
+
+components:
+  responses:
+    401:
+      description: User Token Unauthorized
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/WebResponse"
+          example:
+            data: null
+            errors: Unauthorized
+            paging: null
+
+  securitySchemes:
+    Auth:
+      description: Authentication for all API except register and login user. To determine whether the user is logged in or not
+      type: apiKey
+      in: header
+      name: X-API-TOKEN
+
+  schemas:
+    RegisterUserRequest:
+      type: object
+      properties:
+        username: 
+          type: string
+          maxLength: 100
+          nullable: false
+        password:
+          type: string
+          maxLength: 100
+          nullable: false
+        name:
+          type: string
+          maxLength: 100
+          nullable: false
+
+    WebResponse:
+      type: object
+      properties:
+        data:
+          type: object
+          nullable: true
+        errors: 
+          type: string
+          nullable: true
+        paging: 
+          $ref: "#/components/schemas/PagingResponse"
+
+    PagingResponse:
+      nullable: true
+      type: object
+      properties:
+          currentPage:
+            type: integer
+            format: int32
+          totalPage:
+            type: integer
+            format: int32
+          size:
+            type: integer
+            format: int32 
+
+    LoginUserRequest:
+      nullable: false
+      type: object
+      properties:
+        username:
+          type: string
+          nullable: false
+        password:
+          type: string
+          nullable: false
+
+    UpdateUserRequest:
+      nullable: false
+      type: object
+      properties:
+        name:
+          type: string
+          nullable: true
+        password:
+          type: string
+          nullable: true
+
+    CreateContactRequest:
+      nullable: false
+      type: object
+      properties:
+        firstName:
+          type: string
+          maxLength: 100
+          nullable: false
+        lastName:
+          type: string    
+          maxLength: 100   
+          nullable: true 
+        email:
+          type: string
+          maxLength: 100
+          nullable: true
+        phone:
+          type: string
+          maxLength: 100
+          nullable: true
+    
+    UpdateContactRequest:
+      nullable: false
+      type: object
+      properties:
+        firstName:
+          type: string
+          maxLength: 100
+          nullable: false
+        lastName:
+          type: string    
+          maxLength: 100
+          nullable: true 
+        email:
+          type: string
+          maxLength: 100
+          nullable: true
+        phone:
+          type: string
+          maxLength: 100
+          nullable: true
+
+    CreateAddressRequest:
+      nullable: false
+      type: object
+      properties:
+        street:
+          type: string
+          maxLength: 200
+          nullable: true
+        city:
+          type: string
+          maxLength: 100
+          nullable: true
+        province:
+          type: string
+          maxLength: 100
+          nullable: true
+        country:
+          type: string
+          maxLength: 100
+          nullable: false
+        postalCode:
+          type: string
+          maxLength: 10
+          nullable: true
+
+    UpdateAddressRequest:
+      nullable: false
+      type: object
+      properties:
+        street:
+          type: string
+          maxLength: 200
+          nullable: true
+        city:
+          type: string
+          maxLength: 100
+          nullable: true
+        province:
+          type: string
+          maxLength: 100
+          nullable: true
+        country:
+          type: string
+          maxLength: 100
+          nullable: false
+        postalCode:
+          type: string
+          maxLength: 10
+          nullable: true
