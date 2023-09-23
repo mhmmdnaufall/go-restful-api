@@ -27,7 +27,7 @@ func (repository *UserRepositoryImpl) Save(ctx context.Context, tx *sql.Tx, user
 
 func (repository *UserRepositoryImpl) Update(ctx context.Context, tx *sql.Tx, user *entity.User) *entity.User {
 	SQL := "UPDATE users SET password = ?, name = ? WHERE username = ?"
-	_, err := tx.ExecContext(ctx, SQL, user.Password, user.Name, user.Token, user.TokenExpiredAt, user.Username)
+	_, err := tx.ExecContext(ctx, SQL, user.Password, user.Name, user.Username)
 	helper.PanicIfError(err)
 
 	return user
@@ -53,7 +53,7 @@ func (repository *UserRepositoryImpl) FindByUsername(ctx context.Context, db *sq
 	helper.PanicIfError(err)
 	defer rows.Close()
 
-	var user *entity.User
+	user := &entity.User{}
 
 	if rows.Next() {
 		err := rows.Scan(&user.Username, &user.Password, &user.Name, &user.Token, &user.TokenExpiredAt)
@@ -70,7 +70,7 @@ func (repository *UserRepositoryImpl) FindByToken(ctx context.Context, db *sql.D
 	helper.PanicIfError(err)
 	defer rows.Close()
 
-	var user *entity.User
+	user := &entity.User{}
 	if rows.Next() {
 		err := rows.Scan(&user.Username, &user.Password, &user.Name, &user.Token, &user.TokenExpiredAt)
 		helper.PanicIfError(err)
