@@ -3,42 +3,27 @@ package main
 import (
 	"github.com/go-playground/validator/v10"
 	_ "github.com/go-sql-driver/mysql"
-	"mhmmdnaufall/go-restful-api/app"
-	controller "mhmmdnaufall/go-restful-api/controller/impl"
 	"mhmmdnaufall/go-restful-api/helper"
 	"mhmmdnaufall/go-restful-api/middleware"
-	repository "mhmmdnaufall/go-restful-api/repository/impl"
-	service "mhmmdnaufall/go-restful-api/service/impl"
 	"net/http"
 )
 
+func NewServer(authMiddleware *middleware.AuthMiddleware) *http.Server {
+	return &http.Server{
+		Addr:    "localhost:8080",
+		Handler: authMiddleware,
+	}
+}
+
+func ProvideValidator() *validator.Validate {
+	return validator.New()
+}
+
 func main() {
 
-	DB := app.NewDb()
-
-	validate := validator.New()
-
-	userRepository := repository.NewUserRepository()
-
-	userService := service.NewUserService(userRepository, DB, validate)
-	authService := service.NewAuthService(userRepository, DB, validate)
-
-	userController := controller.NewUserController(userService)
-	authController := controller.NewAuthController(authService)
-
-	router := app.NewRouter(userController, authController)
-
-	authMiddlerware := &middleware.AuthMiddleware{
-		Handler:        router,
-		UserRepository: userRepository,
-		DB:             DB,
-	}
-
-	server := http.Server{
-		Addr:    "localhost:8080",
-		Handler: authMiddlerware,
-	}
+	server := InitializeServer()
 
 	err := server.ListenAndServe()
 	helper.PanicIfError(err)
+
 }
