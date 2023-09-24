@@ -13,6 +13,10 @@ func ErrorHandler(writer http.ResponseWriter, request *http.Request, err any) {
 		return
 	}
 
+	if unauthorizedError(writer, request, err) {
+		return
+	}
+
 	if validationErrors(writer, request, err) {
 		return
 	}
@@ -53,6 +57,26 @@ func badRequestError(writer http.ResponseWriter, request *http.Request, err any)
 		}
 
 		helper.WriteToResponseBody(writer, webResponse)
+		return true
+	} else {
+		return false
+	}
+
+}
+
+func unauthorizedError(writer http.ResponseWriter, request *http.Request, err any) bool {
+	exception, ok := err.(*UnauthorizedError)
+
+	if ok {
+		writer.Header().Set("Content-Type", "application/json")
+		writer.WriteHeader(http.StatusUnauthorized)
+
+		webResponse := &model.WebResponse[any]{
+			Errors: exception.Error,
+		}
+
+		helper.WriteToResponseBody(writer, webResponse)
+
 		return true
 	} else {
 		return false

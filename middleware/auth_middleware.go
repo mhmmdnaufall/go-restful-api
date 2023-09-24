@@ -8,6 +8,7 @@ import (
 	"mhmmdnaufall/go-restful-api/repository"
 	"net/http"
 	"strings"
+	"time"
 )
 
 var permitPath = map[string]string{
@@ -21,6 +22,10 @@ type AuthMiddleware struct {
 	DB             *sql.DB
 }
 
+func NewAuthMiddleware(handler http.Handler, userRepository repository.UserRepository, DB *sql.DB) *AuthMiddleware {
+	return &AuthMiddleware{Handler: handler, UserRepository: userRepository, DB: DB}
+}
+
 func (middleware *AuthMiddleware) ServeHTTP(writer http.ResponseWriter, request *http.Request) {
 
 	requestPath := request.URL.Path
@@ -29,7 +34,7 @@ func (middleware *AuthMiddleware) ServeHTTP(writer http.ResponseWriter, request 
 	allowedMethod, pathAllowed := permitPath[requestPath]
 
 	token := request.Header.Get("X-API-TOKEN")
-	_, err := middleware.UserRepository.FindByToken(request.Context(), middleware.DB, token)
+	user, err := middleware.UserRepository.FindByToken(request.Context(), middleware.DB, token)
 
 	if (pathAllowed) && (allowedMethod == requestMethod) {
 
@@ -39,7 +44,7 @@ func (middleware *AuthMiddleware) ServeHTTP(writer http.ResponseWriter, request 
 
 	}
 
-	if (len(strings.TrimSpace(token)) == 0) || (err != nil) {
+	if (len(strings.TrimSpace(token)) == 0) || (err != nil) || (user.TokenExpiredAt.Int64 < time.Now().UnixMilli()) {
 
 		writer.Header().Set("Content-Type", "application/json")
 		writer.WriteHeader(http.StatusUnauthorized)

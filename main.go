@@ -19,9 +19,14 @@ func main() {
 	validate := validator.New()
 
 	userRepository := repository.NewUserRepository()
+
 	userService := service.NewUserService(userRepository, DB, validate)
+	authService := service.NewAuthService(userRepository, DB, validate)
+
 	userController := controller.NewUserController(userService)
-	router := app.NewRouter(userController)
+	authController := controller.NewAuthController(authService)
+
+	router := app.NewRouter(userController, authController)
 
 	authMiddlerware := &middleware.AuthMiddleware{
 		Handler:        router,

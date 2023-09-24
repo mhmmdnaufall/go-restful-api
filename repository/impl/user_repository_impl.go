@@ -26,8 +26,20 @@ func (repository *UserRepositoryImpl) Save(ctx context.Context, tx *sql.Tx, user
 }
 
 func (repository *UserRepositoryImpl) Update(ctx context.Context, tx *sql.Tx, user *entity.User) *entity.User {
-	SQL := "UPDATE users SET password = ?, name = ? WHERE username = ?"
-	_, err := tx.ExecContext(ctx, SQL, user.Password, user.Name, user.Username)
+	SQL := "UPDATE users SET password = ?, name = ?, token = ?, token_expired_at = ? WHERE username = ?"
+
+	var token any = nil
+	var tokenExpiredAt any = nil
+
+	if user.Token.Valid {
+		token = user.Token.String
+	}
+
+	if user.TokenExpiredAt.Valid {
+		tokenExpiredAt = user.TokenExpiredAt.Int64
+	}
+
+	_, err := tx.ExecContext(ctx, SQL, user.Password, user.Name, token, tokenExpiredAt, user.Username)
 	helper.PanicIfError(err)
 
 	return user
