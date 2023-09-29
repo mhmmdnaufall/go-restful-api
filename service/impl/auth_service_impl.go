@@ -35,11 +35,16 @@ func (authService *AuthServiceImpl) Login(ctx context.Context, request *model.Lo
 	}
 
 	if err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(request.Password)); err == nil {
-		user.Token.String = uuid.New().String()
-		user.Token.Valid = true
 
-		user.TokenExpiredAt.Int64 = authService.next30Days()
-		user.TokenExpiredAt.Valid = true
+		user.Token = sql.NullString{
+			String: uuid.New().String(),
+			Valid:  true,
+		}
+
+		user.TokenExpiredAt = sql.NullInt64{
+			Int64: authService.next30Days(),
+			Valid: true,
+		}
 
 		tx, err := authService.DB.Begin()
 		helper.PanicIfError(err)
