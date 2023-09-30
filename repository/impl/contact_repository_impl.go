@@ -8,6 +8,7 @@ import (
 	"mhmmdnaufall/go-restful-api/helper"
 	"mhmmdnaufall/go-restful-api/model"
 	"mhmmdnaufall/go-restful-api/repository"
+	"strconv"
 	"strings"
 )
 
@@ -27,6 +28,20 @@ func (contactRepository *ContactRepositoryImpl) Save(ctx context.Context, tx *sq
 	helper.PanicIfError(err)
 
 	return contact
+}
+
+func (contactRepository *ContactRepositoryImpl) Update(ctx context.Context, tx *sql.Tx, contact *entity.Contact) *entity.Contact {
+	SQL := "UPDATE contacts SET first_name = ?, last_name = ?, email = ?, phone = ? WHERE id = ?"
+	_, err := tx.ExecContext(ctx, SQL, contact.FirstName, contact.LastName, contact.Email, contact.Phone, contact.Id)
+	helper.PanicIfError(err)
+
+	return contact
+}
+
+func (contactRepository *ContactRepositoryImpl) Delete(ctx context.Context, tx *sql.Tx, contact *entity.Contact) {
+	SQL := "DELETE FROM contacts WHERE id = ?"
+	_, err := tx.ExecContext(ctx, SQL, contact.Id)
+	helper.PanicIfError(err)
 }
 
 func (contactRepository *ContactRepositoryImpl) FindByUserAndId(ctx context.Context, db *sql.DB, user *entity.User, id string) (*entity.Contact, error) {
@@ -53,30 +68,29 @@ func (contactRepository *ContactRepositoryImpl) FindByUserAndId(ctx context.Cont
 
 func (contactRepository *ContactRepositoryImpl) Search(ctx context.Context, db *sql.DB, user *entity.User, request *model.SearchContactRequest) ([]*entity.Contact, int) {
 	SQL := "SELECT id, first_name, last_name, email, phone FROM contacts"
-	query := " WHERE username = $1"
+	query := " WHERE username = ?"
 	params := []any{user.Username}
 
 	if len(strings.TrimSpace(request.Name)) != 0 {
-		query += " AND (first_name LIKE $2 OR last_name LIKE $3)"
-		params = append(params, "%"+request.Name+"%")
+		query += " AND (first_name LIKE ? OR last_name LIKE ?)"
+		params = append(params, "%"+request.Name+"%", "%"+request.Name+"%")
 	}
 
 	if len(strings.TrimSpace(request.Email)) != 0 {
-		query += " AND email LIKE $4"
+		query += " AND email LIKE ?"
 		params = append(params, "%"+request.Email+"%")
 	}
 
 	if len(strings.TrimSpace(request.Phone)) != 0 {
-		query += " AND phone LIKE $5"
+		query += " AND phone LIKE ?"
 		params = append(params, "%"+request.Phone+"%")
 	}
 
 	SQL += query
-	SQL += " LIMIT $6, $7"
-	params = append(params, request.Page*request.Size, request.Size)
+	SQL += " LIMIT " + strconv.Itoa(request.Page*request.Size) + ", " + strconv.Itoa(request.Size)
 
 	var totalPage int
-	totalPageSQL := "SELECT CEIL(COUNT(*) / $7) FROM contacts"
+	totalPageSQL := "SELECT CEIL(COUNT(*) / " + strconv.Itoa(request.Size) + ") FROM contacts"
 	totalPageSQL += query
 	rows, err := db.QueryContext(ctx, totalPageSQL, params...)
 	helper.PanicIfError(err)
@@ -94,6 +108,7 @@ func (contactRepository *ContactRepositoryImpl) Search(ctx context.Context, db *
 		contact := &entity.Contact{}
 		err := rows.Scan(&contact.Id, &contact.FirstName, &contact.LastName, &contact.Email, &contact.Phone)
 		helper.PanicIfError(err)
+		contact.User = user
 		contacts = append(contacts, contact)
 	}
 
