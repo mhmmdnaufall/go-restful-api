@@ -21,6 +21,10 @@ func ErrorHandler(writer http.ResponseWriter, request *http.Request, err any) {
 		return
 	}
 
+	if notFoundError(writer, request, err) {
+		return
+	}
+
 	internalServerError(writer, request, err)
 }
 
@@ -82,6 +86,24 @@ func unauthorizedError(writer http.ResponseWriter, request *http.Request, err an
 		return false
 	}
 
+}
+
+func notFoundError(writer http.ResponseWriter, request *http.Request, err any) bool {
+	exception, ok := err.(*NotFoundError)
+	if ok {
+		writer.Header().Set("Content-Type", "application/json")
+		writer.WriteHeader(http.StatusNotFound)
+
+		webResponse := &model.WebResponse[any]{
+			Errors: exception.Error,
+		}
+
+		helper.WriteToResponseBody(writer, webResponse)
+
+		return true
+	} else {
+		return false
+	}
 }
 
 func internalServerError(writer http.ResponseWriter, request *http.Request, err any) {
