@@ -25,12 +25,19 @@ var authSet = wire.NewSet(
 	controllerImpl.NewAuthController,
 )
 
+var contactSet = wire.NewSet(
+	serviceImpl.NewContactService,
+	repositoryImpl.NewContactRepository,
+	controllerImpl.NewContactController,
+)
+
 func InitializeServer() *http.Server {
 	wire.Build(
 		app.NewDb,
 		ProvideValidator,
 		userSet,
 		authSet,
+		contactSet,
 		app.NewRouter,
 		wire.Bind(new(http.Handler), new(*httprouter.Router)),
 		middleware.NewAuthMiddleware,
