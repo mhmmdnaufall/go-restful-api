@@ -49,6 +49,8 @@ func (contactService *ContactServiceImpl) Create(ctx context.Context, userToken 
 		User: user,
 	}
 
+	helper.NullStringCheck(contact)
+
 	tx, err := contactService.DB.Begin()
 	helper.PanicIfError(err)
 	defer helper.CommitOrRollback(tx)
@@ -91,6 +93,8 @@ func (contactService *ContactServiceImpl) Update(ctx context.Context, userToken 
 		String: request.Email,
 		Valid:  true,
 	}
+
+	helper.NullStringCheck(contact)
 
 	tx, err := contactService.DB.Begin()
 	helper.PanicIfError(err)
