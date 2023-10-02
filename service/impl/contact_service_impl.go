@@ -65,7 +65,7 @@ func (contactService *ContactServiceImpl) Get(ctx context.Context, userToken str
 	helper.PanicIfError(err)
 
 	contact, err := contactService.ContactRepository.FindByUserAndId(ctx, contactService.DB, user, id)
-	helper.PanicIfError(err)
+	exception.PanicNotFoundIfError(err, "contact not found")
 
 	return contactService.toContactResponse(contact)
 }
@@ -78,7 +78,7 @@ func (contactService *ContactServiceImpl) Update(ctx context.Context, userToken 
 	helper.PanicIfError(err)
 
 	contact, err := contactService.ContactRepository.FindByUserAndId(ctx, contactService.DB, user, request.Id)
-	helper.PanicIfError(err)
+	exception.PanicNotFoundIfError(err, "contact not found")
 
 	contact.FirstName = request.FirstName
 	contact.LastName = sql.NullString{
@@ -110,9 +110,7 @@ func (contactService *ContactServiceImpl) Delete(ctx context.Context, userToken 
 	helper.PanicIfError(err)
 
 	contact, err := contactService.FindByUserAndId(ctx, contactService.DB, user, contactId)
-	if err != nil {
-		panic(exception.NewNotFoundError("Contact Not Found"))
-	}
+	exception.PanicNotFoundIfError(err, "contact not found")
 
 	tx, err := contactService.DB.Begin()
 	helper.PanicIfError(err)
