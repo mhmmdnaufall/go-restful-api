@@ -6,7 +6,7 @@ import (
 	"mhmmdnaufall/go-restful-api/exception"
 )
 
-func NewRouter(userController controller.UserController, authController controller.AuthController, contactController controller.ContactController) *httprouter.Router {
+func NewRouter(userController controller.UserController, authController controller.AuthController, contactController controller.ContactController, addressController controller.AddressController) *httprouter.Router {
 	router := httprouter.New()
 
 	// user api
@@ -24,6 +24,13 @@ func NewRouter(userController controller.UserController, authController controll
 	router.PUT("/api/contacts/:contactId", contactController.Update)
 	router.DELETE("/api/contacts/:contactId", contactController.Delete)
 	router.GET("/api/contacts", contactController.Search)
+
+	// address api
+	router.POST("/api/contacts/:contactId/addresses", addressController.Create)
+	router.GET("/api/contacts/:contactId/addresses", addressController.List)
+	router.GET("/api/contacts/:contactId/addresses/:addressId", addressController.Get)
+	router.PUT("/api/contacts/:contactId/addresses/:addressId", addressController.Update)
+	router.DELETE("/api/contacts/:contactId/addresses/:addressId", addressController.Remove)
 
 	router.PanicHandler = exception.ErrorHandler
 

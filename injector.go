@@ -31,6 +31,12 @@ var contactSet = wire.NewSet(
 	controllerImpl.NewContactController,
 )
 
+var addressSet = wire.NewSet(
+	repositoryImpl.NewAddressRepository,
+	serviceImpl.NewAddressService,
+	controllerImpl.NewAddressController,
+)
+
 func InitializeServer() *http.Server {
 	wire.Build(
 		app.NewDb,
@@ -38,6 +44,7 @@ func InitializeServer() *http.Server {
 		userSet,
 		authSet,
 		contactSet,
+		addressSet,
 		app.NewRouter,
 		wire.Bind(new(http.Handler), new(*httprouter.Router)),
 		middleware.NewAuthMiddleware,

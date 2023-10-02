@@ -33,7 +33,10 @@ func InitializeServer() *http.Server {
 	contactRepository := impl.NewContactRepository()
 	contactService := impl2.NewContactService(userRepository, contactRepository, db, validate)
 	contactController := impl3.NewContactController(contactService)
-	router := app.NewRouter(userController, authController, contactController)
+	addressRepository := impl.NewAddressRepository()
+	addressService := impl2.NewAddressService(userRepository, contactRepository, addressRepository, db, validate)
+	addressController := impl3.NewAddressController(addressService)
+	router := app.NewRouter(userController, authController, contactController, addressController)
 	authMiddleware := middleware.NewAuthMiddleware(router, userRepository, db)
 	server := NewServer(authMiddleware)
 	return server
@@ -46,3 +49,5 @@ var userSet = wire.NewSet(impl.NewUserRepository, impl2.NewUserService, impl3.Ne
 var authSet = wire.NewSet(impl2.NewAuthService, impl3.NewAuthController)
 
 var contactSet = wire.NewSet(impl2.NewContactService, impl.NewContactRepository, impl3.NewContactController)
+
+var addressSet = wire.NewSet(impl.NewAddressRepository, impl2.NewAddressService, impl3.NewAddressController)
