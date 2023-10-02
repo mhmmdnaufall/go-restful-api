@@ -66,10 +66,7 @@ func (authService *AuthServiceImpl) Logout(ctx context.Context, userToken string
 	user, err := authService.UserRepository.FindByToken(ctx, authService.DB, userToken)
 	helper.PanicIfError(err)
 
-	user.Token.String = ""
 	user.Token.Valid = false
-
-	user.TokenExpiredAt.Int64 = 0
 	user.TokenExpiredAt.Valid = false
 
 	tx, err := authService.DB.Begin()
